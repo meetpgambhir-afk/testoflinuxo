@@ -58,8 +58,9 @@
 
     <div id="screen"></div>
 
-    <!-- Correct v86 bundle -->
-    <script src="https://copy.sh/v86/build/v86_all.js"></script>
+    <!-- Minimal v86 build (NO demo UI, NO onclick errors) -->
+    <script src="https://copy.sh/v86/build/libv86.js"></script>
+    <script src="https://copy.sh/v86/build/v86.wasm.js"></script>
 
     <script>
         let vm = null;
@@ -82,7 +83,7 @@
             else if (screen.msRequestFullscreen) screen.msRequestFullscreen();
         });
 
-        // Automatically enable Start button when v86 is ready
+        // Enable Start button only when v86 is loaded
         const checkV86 = setInterval(() => {
             if (typeof V86Starter !== "undefined") {
                 startBtn.disabled = false;
