@@ -1,90 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>TinyCore VM</title>
+<title>TinyCore Linux Web VM</title>
+
+<script src="https://copy.sh/v86/build/libv86.js"></script>
+
 <style>
-    body {
-        font-family: sans-serif;
-        background: #222;
-        color: #eee;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin: 0;
-        padding: 0;
-    }
-    #controls {
-        margin: 10px;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-    #screen {
-        width: 800px;
-        height: 600px;
-        background: black;
-        border: 2px solid #555;
-    }
-    label { display: flex; align-items: center; gap: 5px; }
-    input[type="range"] { width: 150px; }
-    button { padding: 5px 10px; cursor: pointer; }
+body {
+    background: #111;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+}
+
+#screen {
+    width: 800px;
+    height: 600px;
+    margin: auto;
+    border: 3px solid #444;
+    background: black;
+}
+
+.controls {
+    margin: 15px;
+}
+
+button, input {
+    padding: 8px;
+    margin: 5px;
+    font-size: 14px;
+}
 </style>
 </head>
+
 <body>
 
-<h1>TinyCore Linux VM</h1>
+<h2>TinyCore Linux Web VM</h2>
 
-<div id="controls">
-    <label>
-        RAM (MB): <span id="ramValue">128</span>
-        <input type="range" id="ramSlider" min="64" max="1024" value="128">
-    </label>
+<div class="controls">
+    RAM:
+    <input type="range" id="ramSlider" min="128" max="1024" value="256" step="64">
+    <span id="ramValue">256 MB</span>
+    <br>
 
-    <button id="fullscreenBtn">Fullscreen</button>
+    <button onclick="startVM()">Start VM</button>
+    <button onclick="goFullscreen()">Fullscreen</button>
 </div>
 
 <div id="screen"></div>
 
-<!-- Minimal v86 build -->
-<script src="https://copy.sh/v86/build/libv86.js"></script>
-
 <script>
-const ramSlider = document.getElementById("ramSlider");
+let emulator = null;
+
+const slider = document.getElementById("ramSlider");
 const ramValue = document.getElementById("ramValue");
-const fullscreenBtn = document.getElementById("fullscreenBtn");
-const screen = document.getElementById("screen");
 
-// Update RAM label
-ramSlider.addEventListener("input", () => {
-    ramValue.textContent = ramSlider.value;
-});
+slider.oninput = function() {
+    ramValue.innerText = this.value + " MB";
+};
 
-// Fullscreen
-fullscreenBtn.addEventListener("click", () => {
-    if (screen.requestFullscreen) screen.requestFullscreen();
-    else if (screen.webkitRequestFullscreen) screen.webkitRequestFullscreen();
-    else if (screen.msRequestFullscreen) screen.msRequestFullscreen();
-});
+function startVM() {
+    if (emulator) return;
 
-// Start VM immediately
-const vm = new V86Starter({
+    const ramMB = parseInt(slider.value);
+
+  emulator = new V86({
     wasm_path: "https://copy.sh/v86/build/v86.wasm",
-    memory_size: parseInt(ramSlider.value) * 1024 * 1024,
+
+    memory_size: ramMB * 1024 * 1024,
     vga_memory_size: 8 * 1024 * 1024,
-    screen_container: screen,
+    screen_container: document.getElementById("screen"),
 
     bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
     vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
 
-    cdrom: { url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso" },
+    cdrom: {
+        url: "TinyCore-current.iso"
+    },
 
-    network_relay_url: "ws://relay.copy.sh:6502/"
-});
+    autostart: true,
 
-vm.add_listener("emulator-ready", () => {
-    console.log("TinyCore VM ready!");
+    // 🔥 Enable Networking
+    networking: true
 });
+}
+
+function goFullscreen() {
+    const screen = document.getElementById("screen");
+    if (screen.requestFullscreen) {
+        screen.requestFullscreen();
+    } else if (screen.webkitRequestFullscreen) {
+        screen.webkitRequestFullscreen();
+    } else if (screen.msRequestFullscreen) {
+        screen.msRequestFullscreen();
+    }
+}
 </script>
 
 </body>
