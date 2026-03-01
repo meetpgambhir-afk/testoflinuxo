@@ -66,17 +66,24 @@ function startVM() {
     const ramMB = parseInt(slider.value);
 
     emulator = new V86({
-        wasm_path: "https://copy.sh/v86/build/v86.wasm",
-        memory_size: ramMB * 1024 * 1024,
-        vga_memory_size: 8 * 1024 * 1024,
-        screen_container: document.getElementById("screen"),
+    wasm_path: "https://copy.sh/v86/build/v86.wasm",
 
-        bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
-        vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+    memory_size: ramMB * 1024 * 1024,
+    vga_memory_size: 8 * 1024 * 1024,
+    screen_container: document.getElementById("screen"),
 
-       cdrom: {
-    url: "TinyCore-current.iso"
-},
+    bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+    vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+
+    cdrom: {
+        url: "TinyCore-current.iso"
+    },
+
+    autostart: true,
+
+    // 🔥 Enable Networking
+    networking: true
+});
 
         autostart: true
     });
@@ -96,4 +103,5 @@ function goFullscreen() {
 
 </body>
 </html>
+
 
