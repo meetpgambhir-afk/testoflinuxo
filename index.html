@@ -58,9 +58,8 @@
 
     <div id="screen"></div>
 
-    <!-- Minimal v86 build (NO demo UI, NO onclick errors) -->
+    <!-- Only include libv86.js -->
     <script src="https://copy.sh/v86/build/libv86.js"></script>
-    <script src="https://copy.sh/v86/build/v86.wasm.js"></script>
 
     <script>
         let vm = null;
@@ -83,7 +82,7 @@
             else if (screen.msRequestFullscreen) screen.msRequestFullscreen();
         });
 
-        // Enable Start button only when v86 is loaded
+        // Enable Start button only when V86Starter is defined
         const checkV86 = setInterval(() => {
             if (typeof V86Starter !== "undefined") {
                 startBtn.disabled = false;
@@ -101,12 +100,9 @@
                 memory_size: parseInt(ramSlider.value) * 1024 * 1024,
                 vga_memory_size: 8 * 1024 * 1024,
                 screen_container: screen,
-
                 bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
                 vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
-
                 cdrom: { url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso" },
-
                 network_relay_url: "ws://relay.copy.sh:6502/"
             });
 
