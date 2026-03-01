@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<p> https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en MUST be used to allow this to run </p>
+<meta charset="UTF-8">
+<title>Tiny Core Linux VM</title>
+<script src="https://copy.sh/v86/build/libv86.js"></script>
+<style>
+body {
+    background:black;
+    color:lime;
+    font-family: monospace;
+    text-align:center;
+}
+#screen_container {
+    margin:auto;
+    width:800px;
+    height:600px;
+    border:2px solid lime;
+}
+button {
+    margin:10px;
+    padding:8px;
+}
+</style>
+</head>
+<body>
+
+<h2>Tiny Core Linux (Hosted via PowerShell)</h2>
+
+<div id="screen_container">
+    <div id="screen"></div>
+</div>
+
+<br>
+<button onclick="startVM()">Start VM</button>
+<button onclick="stopVM()">Stop VM</button>
+
+<script>
+let emulator;
+
+function startVM() {
+    if(emulator) return;
+
+    emulator = new V86({
+        wasm_path: "https://copy.sh/v86/build/v86.wasm",
+        memory_size: 256 * 1024 * 1024,
+        vga_memory_size: 8 * 1024 * 1024,
+        screen_container: document.getElementById("screen"),
+
+        bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+        vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+
+        cdrom: {
+            url: "https://tinycorelinux.net/14.x/x86/TinyCore-current.iso"
+        },
+
+        autostart: true
+    });
+}
+</script>
+
+</body>
+</html>
