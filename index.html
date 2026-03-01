@@ -41,7 +41,6 @@
         <input type="range" id="ramSlider" min="64" max="1024" value="128">
     </label>
 
-    <button id="startBtn">Start VM</button>
     <button id="fullscreenBtn">Fullscreen</button>
 </div>
 
@@ -51,11 +50,8 @@
 <script src="https://copy.sh/v86/build/libv86.js"></script>
 
 <script>
-let vm = null;
-
 const ramSlider = document.getElementById("ramSlider");
 const ramValue = document.getElementById("ramValue");
-const startBtn = document.getElementById("startBtn");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
 const screen = document.getElementById("screen");
 
@@ -71,27 +67,23 @@ fullscreenBtn.addEventListener("click", () => {
     else if (screen.msRequestFullscreen) screen.msRequestFullscreen();
 });
 
-// Start VM
-startBtn.addEventListener("click", () => {
-    if (vm) return;
+// Start VM immediately
+const vm = new V86Starter({
+    wasm_path: "https://copy.sh/v86/build/v86.wasm",
+    memory_size: parseInt(ramSlider.value) * 1024 * 1024,
+    vga_memory_size: 8 * 1024 * 1024,
+    screen_container: screen,
 
-    vm = new V86Starter({
-        wasm_path: "https://copy.sh/v86/build/v86.wasm",
-        memory_size: parseInt(ramSlider.value) * 1024 * 1024,
-        vga_memory_size: 8 * 1024 * 1024,
-        screen_container: screen,
+    bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+    vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
 
-        bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
-        vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+    cdrom: { url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso" },
 
-        cdrom: { url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso" },
+    network_relay_url: "ws://relay.copy.sh:6502/"
+});
 
-        network_relay_url: "ws://relay.copy.sh:6502/"
-    });
-
-    vm.add_listener("emulator-ready", () => {
-        console.log("TinyCore VM ready!");
-    });
+vm.add_listener("emulator-ready", () => {
+    console.log("TinyCore VM ready!");
 });
 </script>
 
