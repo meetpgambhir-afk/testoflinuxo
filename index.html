@@ -1,107 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TinyCore Linux Web VM</title>
-
-<script src="https://copy.sh/v86/build/libv86.js"></script>
-
+<title>TinyCore Browser VM</title>
 <style>
-body {
-    background: #111;
-    color: white;
-    font-family: Arial;
-    text-align: center;
-}
-
-#screen {
-    width: 800px;
-    height: 600px;
-    margin: auto;
-    border: 3px solid #444;
-    background: black;
-}
-
-.controls {
-    margin: 15px;
-}
-
-button, input {
-    padding: 8px;
-    margin: 5px;
-    font-size: 14px;
-}
+  body { margin: 0; background: #000; color: #fff; font-family: sans-serif; }
+  #controls { position: fixed; top: 5px; left: 5px; z-index: 10; }
+  button, input { margin: 5px; }
+  #screen { width: 100vw; height: 100vh; display: block; }
 </style>
 </head>
-
 <body>
 
-<h2>TinyCore Linux Web VM</h2>
-
-<div class="controls">
-    RAM:
-    <input type="range" id="ramSlider" min="128" max="1024" value="256" step="64">
-    <span id="ramValue">256 MB</span>
-    <br>
-
-    <button onclick="startVM()">Start VM</button>
-    <button onclick="goFullscreen()">Fullscreen</button>
+<div id="controls">
+  RAM: <input type="range" id="ramSlider" min="16" max="512" value="64"> MB
+  <button id="fullscreenBtn">Fullscreen</button>
 </div>
+<canvas id="screen"></canvas>
 
-<div id="screen"></div>
-
+<script src="https://copy.sh/v86/build/libv86.js"></script>
 <script>
-let emulator = null;
+  const canvas = document.getElementById("screen");
+  const ramSlider = document.getElementById("ramSlider");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
 
-const slider = document.getElementById("ramSlider");
-const ramValue = document.getElementById("ramValue");
+  let memorySize = parseInt(ramSlider.value) * 1024 * 1024;
 
-slider.oninput = function() {
-    ramValue.innerText = this.value + " MB";
-};
+  let tcore_vm = new V86Starter({
+      wasm_path: "https://copy.sh/v86/build/libv86.wasm",
+      memory_size: memorySize,
+      vga_memory_size: 2*1024*1024,
+      screen_container: canvas,
+      autostart: true,
+      cdrom: {
+          url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso",
+      },
+      network_relay_url: "wss://copy.sh/v86network", // optional networking
+  });
 
-function startVM() {
-    if (emulator) return;
+  // Inject DNS setup in bootlocal.sh
+  tcore_vm.add_file("/opt/bootlocal.sh", `
+#!/bin/sh
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+`);
 
-    const ramMB = parseInt(slider.value);
+  // RAM slider
+  ramSlider.addEventListener("input", () => {
+      alert("Changing RAM dynamically is not supported by libv86. Restart VM with new value.");
+  });
 
-    emulator = new V86({
-    wasm_path: "https://copy.sh/v86/build/v86.wasm",
+  // Fullscreen button
+  fullscreenBtn.addEventListener("click", () => {
+      if (canvas.requestFullscreen) canvas.requestFullscreen();
+      else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen();
+      else if (canvas.mozRequestFullScreen) canvas.mozRequestFullScreen();
+  });
 
-    memory_size: ramMB * 1024 * 1024,
-    vga_memory_size: 8 * 1024 * 1024,
-    screen_container: document.getElementById("screen"),
-
-    bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
-    vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
-
-    cdrom: {
-        url: "TinyCore-current.iso"
-    },
-
-    autostart: true,
-
-    // 🔥 Enable Networking
-    networking: true
-});
-
-        autostart: true
-    });
-}
-
-function goFullscreen() {
-    const screen = document.getElementById("screen");
-    if (screen.requestFullscreen) {
-        screen.requestFullscreen();
-    } else if (screen.webkitRequestFullscreen) {
-        screen.webkitRequestFullscreen();
-    } else if (screen.msRequestFullscreen) {
-        screen.msRequestFullscreen();
-    }
-}
+  console.log("TinyCore VM initialized. DNS auto-set via bootlocal.sh");
 </script>
-
 </body>
 </html>
-
-
