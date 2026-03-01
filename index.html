@@ -1,50 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-<p> https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en MUST be used to allow this to run </p>
 <meta charset="UTF-8">
-<title>Tiny Core Linux VM</title>
+<title>TinyCore Linux Web VM</title>
+
 <script src="https://copy.sh/v86/build/libv86.js"></script>
+
 <style>
 body {
-    background:black;
-    color:lime;
-    font-family: monospace;
-    text-align:center;
+    background: #111;
+    color: white;
+    font-family: Arial;
+    text-align: center;
 }
-#screen_container {
-    margin:auto;
-    width:800px;
-    height:600px;
-    border:2px solid lime;
+
+#screen {
+    width: 800px;
+    height: 600px;
+    margin: auto;
+    border: 3px solid #444;
+    background: black;
 }
-button {
-    margin:10px;
-    padding:8px;
+
+.controls {
+    margin: 15px;
+}
+
+button, input {
+    padding: 8px;
+    margin: 5px;
+    font-size: 14px;
 }
 </style>
 </head>
+
 <body>
 
-<h2>Tiny Core Linux (Hosted via PowerShell)</h2>
+<h2>TinyCore Linux Web VM</h2>
 
-<div id="screen_container">
-    <div id="screen"></div>
+<div class="controls">
+    RAM:
+    <input type="range" id="ramSlider" min="128" max="1024" value="256" step="64">
+    <span id="ramValue">256 MB</span>
+    <br>
+
+    <button onclick="startVM()">Start VM</button>
+    <button onclick="goFullscreen()">Fullscreen</button>
 </div>
 
-<br>
-<button onclick="startVM()">Start VM</button>
-<button onclick="stopVM()">Stop VM</button>
+<div id="screen"></div>
 
 <script>
-let emulator;
+let emulator = null;
+
+const slider = document.getElementById("ramSlider");
+const ramValue = document.getElementById("ramValue");
+
+slider.oninput = function() {
+    ramValue.innerText = this.value + " MB";
+};
 
 function startVM() {
-    if(emulator) return;
+    if (emulator) return;
+
+    const ramMB = parseInt(slider.value);
 
     emulator = new V86({
         wasm_path: "https://copy.sh/v86/build/v86.wasm",
-        memory_size: 256 * 1024 * 1024,
+        memory_size: ramMB * 1024 * 1024,
         vga_memory_size: 8 * 1024 * 1024,
         screen_container: document.getElementById("screen"),
 
@@ -52,11 +75,22 @@ function startVM() {
         vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
 
         cdrom: {
-            url: "https://tinycorelinux.net/14.x/x86/TinyCore-current.iso"
+            url: "https://raw.githubusercontent.com/meetpgambhir-afk/testoflinuxo/main/TinyCore-current.iso"
         },
 
         autostart: true
     });
+}
+
+function goFullscreen() {
+    const screen = document.getElementById("screen");
+    if (screen.requestFullscreen) {
+        screen.requestFullscreen();
+    } else if (screen.webkitRequestFullscreen) {
+        screen.webkitRequestFullscreen();
+    } else if (screen.msRequestFullscreen) {
+        screen.msRequestFullscreen();
+    }
 }
 </script>
 
