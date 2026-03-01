@@ -36,6 +36,10 @@
             padding: 5px 10px;
             cursor: pointer;
         }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -47,7 +51,8 @@
             RAM (MB): <span id="ramValue">128</span>
             <input type="range" id="ramSlider" min="64" max="1024" value="128">
         </label>
-        <button id="startBtn">Start VM</button>
+
+        <button id="startBtn" disabled>Loading VM…</button>
         <button id="fullscreenBtn">Fullscreen</button>
     </div>
 
@@ -77,14 +82,18 @@
             else if (screen.msRequestFullscreen) screen.msRequestFullscreen();
         });
 
+        // Automatically enable Start button when v86 is ready
+        const checkV86 = setInterval(() => {
+            if (typeof V86Starter !== "undefined") {
+                startBtn.disabled = false;
+                startBtn.textContent = "Start VM";
+                clearInterval(checkV86);
+            }
+        }, 100);
+
         // Start VM
         startBtn.addEventListener("click", () => {
             if (vm) return;
-
-            if (typeof V86Starter === "undefined") {
-                alert("v86 is still loading. Try again in a moment.");
-                return;
-            }
 
             vm = new V86Starter({
                 wasm_path: "https://copy.sh/v86/build/v86.wasm",
