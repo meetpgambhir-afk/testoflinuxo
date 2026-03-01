@@ -2,62 +2,66 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>TinyCore Browser VM</title>
+<title>TinyCore VM</title>
 <style>
-  body { margin: 0; background: #000; color: #fff; font-family: sans-serif; }
-  #controls { position: fixed; top: 5px; left: 5px; z-index: 10; }
-  button, input { margin: 5px; }
-  #screen { width: 100vw; height: 100vh; display: block; }
+  body { font-family: sans-serif; background: #111; color: #eee; text-align: center; }
+  #screen { border: 2px solid #888; margin-top: 10px; }
+  label { margin-right: 10px; }
+  input[type=range] { width: 200px; }
+  button { margin-left: 10px; padding: 5px 10px; }
 </style>
 </head>
 <body>
+<h1>TinyCore VM</h1>
 
-<div id="controls">
-  RAM: <input type="range" id="ramSlider" min="16" max="512" value="64"> MB
-  <button id="fullscreenBtn">Fullscreen</button>
-</div>
-<canvas id="screen"></canvas>
+<label for="ramSlider">RAM (MB):</label>
+<input type="range" id="ramSlider" min="16" max="512" value="128">
+<span id="ramValue">128 MB</span>
+<button id="fullscreenBtn">Fullscreen</button>
+<button id="startBtn">Start VM</button>
+
+<canvas id="screen" width="800" height="600"></canvas>
 
 <script src="https://copy.sh/v86/build/libv86.js"></script>
 <script>
-  const canvas = document.getElementById("screen");
-  const ramSlider = document.getElementById("ramSlider");
-  const fullscreenBtn = document.getElementById("fullscreenBtn");
+const ramSlider = document.getElementById("ramSlider");
+const ramValue = document.getElementById("ramValue");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const startBtn = document.getElementById("startBtn");
+const screen = document.getElementById("screen");
 
-  let memorySize = parseInt(ramSlider.value) * 1024 * 1024;
+ramSlider.addEventListener("input", () => {
+    ramValue.textContent = ramSlider.value + " MB";
+});
 
-  let tcore_vm = new V86Starter({
-      wasm_path: "https://copy.sh/v86/build/libv86.wasm",
-      memory_size: memorySize,
-      vga_memory_size: 2*1024*1024,
-      screen_container: canvas,
-      autostart: true,
-      cdrom: {
-          url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso",
-      },
-      network_relay_url: "wss://copy.sh/v86network", // optional networking
-  });
+fullscreenBtn.addEventListener("click", () => {
+    if (screen.requestFullscreen) screen.requestFullscreen();
+    else if (screen.webkitRequestFullscreen) screen.webkitRequestFullscreen();
+});
 
-  // Inject DNS setup in bootlocal.sh
-  tcore_vm.add_file("/opt/bootlocal.sh", `
-#!/bin/sh
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
-echo "nameserver 1.1.1.1" >> /etc/resolv.conf
-`);
+let vm = null;
 
-  // RAM slider
-  ramSlider.addEventListener("input", () => {
-      alert("Changing RAM dynamically is not supported by libv86. Restart VM with new value.");
-  });
+startBtn.addEventListener("click", () => {
+    if (vm) {
+        alert("VM already started!");
+        return;
+    }
 
-  // Fullscreen button
-  fullscreenBtn.addEventListener("click", () => {
-      if (canvas.requestFullscreen) canvas.requestFullscreen();
-      else if (canvas.webkitRequestFullscreen) canvas.webkitRequestFullscreen();
-      else if (canvas.mozRequestFullScreen) canvas.mozRequestFullScreen();
-  });
+    vm = new V86Starter({
+        wasm_path: "https://copy.sh/v86/build/v86.wasm",
+        memory_size: parseInt(ramSlider.value) * 1024 * 1024,
+        vga_memory_size: 8 * 1024 * 1024,
+        screen_container: screen,
+        bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+        vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+        cdrom: { url: "https://github.com/meetpgambhir-afk/testoflinuxo/raw/refs/heads/main/TinyCore-current.iso" },
+        network_relay_url: "ws://relay.copy.sh:6502/"
+    });
 
-  console.log("TinyCore VM initialized. DNS auto-set via bootlocal.sh");
+    vm.add_listener("emulator-ready", () => {
+        console.log("TinyCore VM is ready!");
+    });
+});
 </script>
 </body>
 </html>
